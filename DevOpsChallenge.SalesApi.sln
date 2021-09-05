@@ -27,7 +27,6 @@ Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-co
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "az-devops", "az-devops", "{A6704683-F33A-4702-B333-DBD30642637C}"
 	ProjectSection(SolutionItems) = preProject
-		azure-pipelines.properties.json = azure-pipelines.properties.json
 		azure-pipelines.yml = azure-pipelines.yml
 	EndProjectSection
 EndProject
