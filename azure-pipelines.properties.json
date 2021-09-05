@@ -1,0 +1,31 @@
+{
+  "iconName": "docker",
+  "parameters": [
+    {
+      "name": "azureServiceConnectionId",
+      "type": "connectedService:azureRM",
+      "required": "true",
+      "displayName": "Azure subscription"
+    },
+    {
+      "name": "containerRegistryConnection",
+      "type": "endpoint:containerRegistry",
+      "required": "true",
+      "displayName": "Container Registry"
+    },
+    {
+      "name": "imageRepository",
+      "type": "string",
+      "required": "true",
+      "displayName": "Image Name",
+      "defaultValue": "**/Dockerfile"
+    },
+    {
+      "name": "registryEndpoint",
+      "type": "string",
+      "required": "true",
+      "displayName": "Image Name",
+      "defaultValue": "**/Dockerfile"
+    }
+  ]
+}

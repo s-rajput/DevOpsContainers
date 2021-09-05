@@ -1,0 +1,118 @@
+# parameters
+parameters: 
+- name: dockerRepository
+  type: string
+  default: srajput81 
+
+- name: doRelease 
+  type: boolean
+  default: 'false'
+
+# set ci trigger
+trigger:
+- master
+
+resources:
+- repo: self
+
+variables: 
+  vmImageName: 'ubuntu-latest'
+  dbContainerImage:  '${{parameters.dockerRepository}}/devopschallengesalesapidb'
+  appContainerImage:  '${{parameters.dockerRepository}}/devopschallengesalesapi'
+  azureSubscription: 'yoursubscription'
+  azureWebAppContainer: 'webappname' 
+  deployEnv: appdevUS
+
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    
+ 
+    - task: DockerCompose@0
+      displayName: 'Build and run unit Test'
+      inputs:
+       containerregistrytype: 'Container Registry'
+       dockerRegistryEndpoint: 'sr_docker'
+       dockerComposeFile: '**/docker-compose.yml'
+       action: 'Build services'
+
+    - task: PublishTestResults@2
+      displayName: 'Publish Test results'
+      inputs:
+        testResultsFormat: 'XUnit'
+        testResultsFiles: '*.trx' 
+        searchFolder: './logs/xunit'
+      continueOnError: true
+      condition: succeededOrFailed()
+
+
+    - task: DockerCompose@0
+      displayName: 'Push images to registry'
+      inputs:
+       containerregistrytype: 'Container Registry'
+       dockerRegistryEndpoint: 'sr_docker'
+       dockerComposeFile: '**/docker-compose.yml'
+       action: 'Push services'
+
+    - task: DockerCompose@0
+      displayName: 'Run integration tests'
+      inputs:
+       containerregistrytype: 'Container Registry'
+       dockerRegistryEndpoint: 'sr_docker'
+       dockerComposeFile: '**/docker-compose.integration-tests.yml'
+       action: 'Build services'
+
+- stage: Release  #job and stage name can not contain deployment keyword
+  displayName: 'Deployment of containers in azure'
+  dependsOn: Build    # this stage runs after Build
+  condition: and(succeeded(), eq('${{ parameters.doRelease }}', 'true'))   #only deploy if asked for deployment (un-necessary)
+  jobs:  
+      - deployment: DeployWeb
+        displayName: Deploy api container images and restart container 
+        environment: $(deployEnv)
+        strategy: 
+          runOnce:
+            deploy:  
+             pool:
+               vmImage: $(vmImageName) 
+             steps:
+                - task: AzureWebAppContainer@1
+                  inputs:
+                    azureSubscription: $(azureSubscription)
+                    appName: $(azureWebAppContainer)
+                    containers: $(appContainerImage)
+                    configurationStrings: '-AppSettings__AppVersion $(Build.BuildNumber)'
+
+                - task: AzureAppServiceManage@0
+                  inputs:
+                    azureSubscription: $(azureSubscription) 
+                    Action: 'Restart Azure App Service'
+                    WebAppName: $(appContainerImage)
+
+                - task: AzureCLI@2
+                  displayName: 'Deploy database container in Azure'
+                  inputs:
+                     azureSubscription: $(azureSubscription)
+                     scriptType: 'bash'
+                     scriptLocation: 'inlineScript'             
+                     inlineScript: az container create --image  $(dbContainerImage) --location eastus  --dns-name-label sqlserver
+      
+            on:
+
+              failure:         
+                pool:
+                 vmImage: $(vmImageName)           
+                steps:
+                - script: echo Failure
+              success:          
+               pool:
+                vmImage: $(vmImageName)          
+               steps: 
+               - script: echo Success
+ 

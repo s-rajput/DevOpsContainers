@@ -1,0 +1,42 @@
+version: '3.4'
+
+services:
+ 
+  devopschallenge.salesapi:
+    image: srajput81/devopschallengesalesapi:latest
+    tty: true
+    environment:   
+      - CONNECTIONSTRINGS__DATABASE=Server=sqlserver;Database=DevOpsChallenge.SalesApi;User Id=sa;Password=S3curePassw0rd! 
+    ports:
+          - "8000:80"
+    build:
+      context: .
+      dockerfile: src/DevOpsChallenge.SalesApi/Dockerfile
+    depends_on:  
+      - devopschallenge.migrations
+      - devopschallenge.db   
+    volumes: 
+      - ./logs/xunit:/var/temp 
+
+  devopschallenge.db:  
+    image: mcr.microsoft.com/mssql/server:2019-latest  
+    hostname: 'sqlserver'  
+    environment:  
+      ACCEPT_EULA: Y  
+      SA_PASSWORD: "S3curePassw0rd!"  
+    volumes:  
+      - ./data/mssql:/var/opt/mssql3  
+    ports:  
+      - '1433:1433'  
+    expose:  
+      - 1433   
+
+  devopschallenge.migrations:
+    image: srajput81/saleapimigrations:latest 
+    build: 
+      context: .
+      dockerfile: src/DevOpsChallenge.SalesApi.Database/Dockerfile 
+    environment:  
+      - CONNECTIONSTRINGS__DATABASE=Server=sqlserver;Database=DevOpsChallenge.SalesApi;User Id=sa;Password=S3curePassw0rd! 
+    depends_on: 
+      - devopschallenge.db 
