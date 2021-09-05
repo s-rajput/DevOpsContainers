@@ -1,4 +1,11 @@
 # DevOps Challenge (.NET)
+![](https://github.com/s-rajput/DevOpsContainers/blob/master/files/one.gif?raw=true)
+
+![](https://github.com/s-rajput/DevOpsContainers/blob/master/files/two.gif?raw=true)
+ 
+![](https://github.com/s-rajput/DevOpsContainers/blob/master/files/swagger.jpg)
+  
+![](https://github.com/s-rajput/DevOpsContainers/blob/master/files/azuredevops.jpg)
 
 ## Introduction :wave:
 
